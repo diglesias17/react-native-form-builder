@@ -10,6 +10,7 @@ import ComponentsRegistry from '../../ComponentsRegistry';
 import {TextWithBadge} from '..';
 import {types, operators} from '../../enums';
 import styles from './styles';
+import QuestionMessages from '../QuestionMessages';
 
 const getFieldValue = (answerRow, question) => {
     let value = answerRow[question.name];
@@ -142,6 +143,18 @@ export default class AddOnList extends Component {
         );
     }
 
+    disableAddButton = () => {
+        const questions = this.props.question.childQuestions;
+
+        return some(questions, question =>
+            some(question.errorValidators, validator => {
+                const chapter = this.state.componentAnswers;
+                const answer = chapter[question.name];
+                return validator.isValid(answer, chapter);
+            })
+        );
+    }
+
 
     render() {
         const {question, style, textWithBadgeStyle} = this.props;
@@ -160,21 +173,34 @@ export default class AddOnList extends Component {
                     ).map(childQuestion => {
                         const QuestionComponent = registry.get(childQuestion.type);
                         return (
-                            <QuestionComponent
-                                key={childQuestion.name}
-                                answer={this.state.componentAnswers[childQuestion.name]}
-                                question={childQuestion}
-                                section={this.state.componentAnswers}
-                                onChange={answer => this.setState(state => ({
-                                    componentAnswers: Object.assign({}, state.componentAnswers, answer)
-                                }))}
-                            />
+                            <View style={{flex: 1}}>
+                                <QuestionComponent
+                                    key={childQuestion.name}
+                                    answer={this.state.componentAnswers[childQuestion.name]}
+                                    question={childQuestion}
+                                    section={this.state.componentAnswers}
+                                    onChange={answer => this.setState(state => ({
+                                        componentAnswers: Object.assign({}, state.componentAnswers, answer)
+                                    }))}
+                                />
+                                {
+                                    this.state.componentAnswers[childQuestion.name] !== null &&
+                                    this.state.componentAnswers[childQuestion.name] !== undefined &&
+                                    <QuestionMessages
+                                        chapter={this.state.componentAnswers}
+                                        answer={this.state.componentAnswers[childQuestion.name]}
+                                        errorValidators={childQuestion.errorValidators}
+                                        warningValidators={childQuestion.warningValidators}
+                                    />
+                                }
+                            </View>
                         );
                     })}
                 </Row>
                 <Button
                     title="AGREGAR"
                     onPress={() => this.addToList()}
+                    disabled={this.disableAddButton}
                 />
                 <View style={computedStyles.tableContainer}>
                     {this.state.answer && this.state.answer.map((answerRow, index) => {
