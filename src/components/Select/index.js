@@ -8,6 +8,13 @@ import {handleChange} from '../../util';
 import styles from './styles';
 import commonStyles from '../commonStyles';
 
+const PLACEHOLDER_VALUE = 'placeholder';
+const generateList = ({options, placeholder}) => {
+    const placeholderOption = {value: PLACEHOLDER_VALUE, label: placeholder};
+    const optionsWithPLaceholder = options;
+    if (placeholder) optionsWithPLaceholder.insert(0, placeholderOption);
+    return optionsWithPLaceholder;
+};
 const Select = ({answer, question, onChange, style, textWithBadgeStyle, disabled}) => {
     const computedStyles = mergeStyles(styles, style);
     return (
@@ -17,12 +24,12 @@ const Select = ({answer, question, onChange, style, textWithBadgeStyle, disabled
                 style={textWithBadgeStyle}
             />}
             <Picker
-                selectedValue={answer}
+                selectedValue={answer || (question.placeholder ? PLACEHOLDER_VALUE : question.options[0].value)}
                 style={computedStyles.picker}
                 onValueChange={itemValue => handleChange(question.name, itemValue, onChange)}
                 enabled={!disabled}
             >
-                {question.options.map(option => (
+                {generateList(question).map(option => (
                     <Picker.Item
                         key={option.value}
                         label={option.label}
